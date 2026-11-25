@@ -4,7 +4,15 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 
-RUN npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
+RUN npm ci \
+    --no-audit \
+    --no-fund \
+    --registry=https://registry.npmjs.org/ \
+    --replace-registry-host=never \
+    --fetch-retries=5 \
+    --fetch-retry-mintimeout=20000 \
+    --fetch-retry-maxtimeout=120000 \
+    --fetch-timeout=300000
 
 FROM node:22-alpine AS build
 WORKDIR /app
