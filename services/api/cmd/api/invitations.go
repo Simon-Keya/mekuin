@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"net"
 	"net/smtp"
@@ -320,4 +319,54 @@ func (s *server) acceptStaffInvitation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	jsonOut(w, 200, map[string]string{"membership_id": membershipID, "business_id": businessID, "role": role, "status": "active"})
+}
+
+func (s *server) revokeStaffInvitation(w http.ResponseWriter, r *http.Request) {
+	tx, _, ok := catalogTx(r)
+	if !ok {
+		jsonOut(w, 500, map[string]string{"error": "tenant_context_missing"})
+		return
+	}
+	invitationID := chi.URLParam(r, "invitationID")
+	if !validUUID(invitationID) {
+		jsonOut(w, 400, map[string]string{"error": "invalid_invitation_id"})
+		return
+	}
+	var email string
+	var accepted, revoked *time.Time
+	err := tx.QueryRow(r.Context(),
+		`SELECT invited_email, accepted_at, revoked_at FROM staff_invitations WHERE business_id=$1 AND id=$2 FOR UPDATE`,
+		tenantBusiness(r), invitationID,
+	).Scan(&email, &accepted, &revoked)
+	if err == pgx.ErrNoRows {
+		jsonOut(w, 404, map[string]string{"error": "invitation_not_found"})
+		return
+	}
+	if err != nil {
+		catalogError(w, err)
+		return
+	}
+	if accepted != nil {
+		jsonOut(w, 409, map[string]string{"error": "invitation_already_accepted"})
+		return
+	}
+	if revoked != nil {
+		jsonOut(w, 409, map[string]string{"error": "invitation_already_revoked"})
+		return
+	}
+	if _, err = tx.Exec(r.Context(),
+		`UPDATE staff_invitations SET revoked_at=now() WHERE business_id=$1 AND id=$2 AND accepted_at IS NULL AND revoked_at IS NULL`,
+		tenantBusiness(r), invitationID,
+	); err != nil {
+		catalogError(w, err)
+		return
+	}
+	if _, err = tx.Exec(r.Context(),
+		`INSERT INTO audit_logs(business_id,actor_user_id,action,entity_type,entity_id,summary) VALUES($1,$2,'staff.invitation.revoked','staff_invitation',$3,$4)`,
+		tenantBusiness(r), r.Context().Value(userIDKey), invitationID, "Staff invitation revoked for "+email,
+	); err != nil {
+		catalogError(w, err)
+		return
+	}
+	jsonOut(w, 200, map[string]any{"invitation_id": invitationID, "status": "revoked"})
 }

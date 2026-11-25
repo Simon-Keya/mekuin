@@ -40,7 +40,7 @@ func validateExpenseReview(decision, reason string) string {
 	if decision != "approve" && decision != "reject" {
 		return "invalid_review_decision"
 	}
-	if len(reason) > 2000 || (decision == "reject" && len(reason) < 5) {
+	if len(reason) > 2000 || (decision == "reject" && len(strings.TrimSpace(reason)) < 10) {
 		return "invalid_review_reason"
 	}
 	return ""

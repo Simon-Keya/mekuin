@@ -396,7 +396,7 @@ func (s *server) receivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 			jsonOut(w, 409, map[string]string{"error": "idempotency_key_payload_mismatch"})
 			return
 		}
-		jsonOut(w, 200, map[string]string{"receipt_id": existingID, "purchase_order_id": id, "status": status, "replayed": true})
+		jsonOut(w, 200, map[string]any{"receipt_id": existingID, "purchase_order_id": id, "status": status, "replayed": true})
 		return
 	}
 	if err != pgx.ErrNoRows {

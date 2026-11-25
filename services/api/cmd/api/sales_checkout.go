@@ -50,7 +50,7 @@ func (s *server) checkoutSale(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		var orderStatus string
-		err = tx.QueryRow(r.Context(), `SELECT status FROM pos_orders WHERE business_id=$1 AND branch_id=$2 AND id=$3 FOR UPDATE`, tc.BusinessID, tc.BranchID, in.OrderID).Scan(&orderStatus)
+		err := tx.QueryRow(r.Context(), `SELECT status FROM pos_orders WHERE business_id=$1 AND branch_id=$2 AND id=$3 FOR UPDATE`, tc.BusinessID, tc.BranchID, in.OrderID).Scan(&orderStatus)
 		if err == pgx.ErrNoRows {
 			jsonOut(w, 404, map[string]string{"error": "order_not_found"})
 			return

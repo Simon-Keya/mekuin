@@ -218,7 +218,7 @@ func (s *server) updateStaffBranches(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if err = auditStaff(r, tx, "staff.branches.updated", mid, "Staff branch assignments updated"); err != nil {
+	if err := auditStaff(r, tx, "staff.branches.updated", mid, "Staff branch assignments updated"); err != nil {
 		catalogError(w, err)
 		return
 	}

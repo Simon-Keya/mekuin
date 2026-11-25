@@ -1,4 +1,4 @@
-import { canClaimDraft, isStaleSync, nextDraftHistory } from "./offline-pos-policy.mjs";
+import { canClaimDraft, isStaleSync, nextDraftHistory } from "./offline-pos-policy";
 export type OfflineProduct = { id: string; sku: string; name: string; sale_price_minor: number; is_active: boolean; is_sellable: boolean };
 export type OfflineLine = { product_id: string; quantity: number };
 export type OfflineTable = { id: string; table_code: string; display_name: string; capacity: number; area?: string | null; is_active: boolean };

@@ -77,7 +77,15 @@ func maskDarajaPhone(phone string) string {
 	if len(p) < 7 {
 		return "***"
 	}
-	return p[:4] + strings.Repeat("*", len(p)-7) + p[len(p)-3:]
+	prefix := 3
+	if strings.HasPrefix(p, "+") {
+		prefix = 4
+	}
+	stars := len(p) - 7
+	if stars < 1 {
+		stars = 1
+	}
+	return p[:prefix] + strings.Repeat("*", stars) + p[len(p)-3:]
 }
 
 // recordMPesaReviewNote records an operator's investigation without changing
