@@ -1,13 +1,29 @@
+
 -- +goose Up
 -- The Goose connection must use the database owner/superuser. The API must use
 -- the restricted mekuin_app role configured separately in DATABASE_URL.
-DO $$ BEGIN
+
+-- +goose StatementBegin
+DO $$
+BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'mekuin_app') THEN
     CREATE ROLE mekuin_app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT;
   END IF;
-END $$;
+END
+$$;
+-- +goose StatementEnd
 
-DO $$ BEGIN EXECUTE format('GRANT CONNECT ON DATABASE %I TO mekuin_app', current_database()); END $$;
+-- +goose StatementBegin
+DO $$
+BEGIN
+  EXECUTE format(
+    'GRANT CONNECT ON DATABASE %I TO mekuin_app',
+    current_database()
+  );
+END
+$$;
+-- +goose StatementEnd
+
 GRANT USAGE ON SCHEMA public TO mekuin_app;
 GRANT SELECT, INSERT, UPDATE ON businesses, app_users, branches, memberships, membership_branches, user_sessions, auth_login_limits TO mekuin_app;
 GRANT SELECT, INSERT ON audit_logs TO mekuin_app;
@@ -21,6 +37,8 @@ ALTER TABLE audit_logs FORCE ROW LEVEL SECURITY;
 
 -- Membership discovery is the one deliberate cross-tenant read: it is scoped to
 -- the authenticated user ID placed in a transaction-local setting by the API.
+
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION list_current_user_workspaces()
 RETURNS TABLE (
   business_id uuid,
@@ -45,6 +63,8 @@ AS $$
     AND br.is_active = true
   ORDER BY b.name, br.name
 $$;
+-- +goose StatementEnd
+
 REVOKE ALL ON FUNCTION list_current_user_workspaces() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION list_current_user_workspaces() TO mekuin_app;
 
