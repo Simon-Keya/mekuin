@@ -1,0 +1,6 @@
+[tools]
+go = "1.24.13"
+node = "22.16.0"
+
+[env]
+GOTOOLCHAIN = "auto"

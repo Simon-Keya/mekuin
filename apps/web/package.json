@@ -1,0 +1,29 @@
+{
+  "name": "@meku-in/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "test:offline": "node --test tests/offline-pos-policy.test.cjs tests/offline-pos-service-worker.test.cjs && node --experimental-strip-types --test tests/offline-pos-indexeddb.test.mjs"
+  },
+  "dependencies": {
+    "next": "15.3.3",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "lucide-react": "^0.468.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.8",
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.6",
+    "eslint": "^9.28.0",
+    "eslint-config-next": "15.3.3",
+    "tailwindcss": "^4.1.8",
+    "typescript": "^5.8.3",
+    "fake-indexeddb": "^6.2.4"
+  }
+}

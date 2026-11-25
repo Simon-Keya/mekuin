@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mekuin}
+      POSTGRES_USER: ${POSTGRES_USER:-mekuin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment}
+    ports:
+      - "5432:5432"
+    volumes:
+      - mekuin_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mekuin} -d ${POSTGRES_DB:-mekuin}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  migrate:
+    image: ghcr.io/pressly/goose:v3.24.3
+    command: ["-dir", "/migrations", "postgres", "postgres://${POSTGRES_USER:-mekuin}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment}@db:5432/${POSTGRES_DB:-mekuin}?sslmode=disable", "up"]
+    volumes:
+      - ./db/migrations:/migrations:ro
+    depends_on:
+      db:
+        condition: service_healthy
+  runtime-role:
+    image: postgres:17-alpine
+    entrypoint: ["/bin/sh", "/scripts/configure-runtime-role.sh"]
+    environment:
+      MIGRATION_DATABASE_URL: postgres://${POSTGRES_USER:-mekuin}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment}@db:5432/${POSTGRES_DB:-mekuin}?sslmode=disable
+      MEKUIN_APP_PASSWORD: ${MEKUIN_APP_PASSWORD:?Set MEKUIN_APP_PASSWORD in your environment}
+    volumes:
+      - ./db/scripts:/scripts:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  api:
+    build:
+      context: ./services/api
+    environment:
+      DATABASE_URL: postgres://mekuin_app:${MEKUIN_APP_PASSWORD:?Set MEKUIN_APP_PASSWORD in your environment}@db:5432/${POSTGRES_DB:-mekuin}?sslmode=disable
+      PORT: 8080
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-true}
+      SESSION_TTL_HOURS: "168"
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+    ports:
+      - "8080:8080"
+    depends_on:
+      runtime-role:
+        condition: service_completed_successfully
+  web:
+    build:
+      context: ./apps/web
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+volumes:
+  mekuin_pg:

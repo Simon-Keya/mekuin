@@ -1,0 +1,7 @@
+@import "tailwindcss";
+:root { color-scheme: light; --ink: #171717; --muted: #77736d; --line: #e9e5df; --paper: #f7f6f3; --amber: #e9a23b; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: Arial, Helvetica, sans-serif; }
+button, input { font: inherit; }
+.field { display:block; width:100%; margin-top:6px; border:1px solid #d6d3d1; border-radius:8px; background:#fff; padding:10px 11px; color:#1c1917; font-size:14px; outline:none; }
+.field:focus { border-color:#b7791f; box-shadow:0 0 0 3px rgb(183 121 31 / 12%); }
